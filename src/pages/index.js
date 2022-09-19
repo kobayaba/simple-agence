@@ -4,7 +4,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { fab, faHtml5, faJs, faReact, faCss3, faGalacticSenate } from '@fortawesome/free-brands-svg-icons'
 import { faHeart, faCode, faGem,  fas} from '@fortawesome/free-solid-svg-icons';
-
+import { navigate } from 'gatsby-link'
 
 import { Banner, TextWrapper, MoreText, SectionTwo, SectionThree, 
     FlexBoxIndex, GenericPara, GenericH2, SectionFour, FormFive } 
@@ -14,9 +14,37 @@ import  Layout  from './../components/layout'
 
 library.add(faHeart, faCode, faGem, fab, fas);
 
+const encode = (data) => {
+  return Object.keys(data)
+    .map(key => encodeURIComponent(key) + "=" + encodeURIComponent(data[key]))
+    .join("&")    
+}
 
-export default function Home() {
-  return (
+
+class IndexPage extends React.Component {
+  constructor(props){
+    super(props)
+    this.state = {name:'', email:'', message:''}
+  }
+
+  handleSubmit = e => {
+    e.preventDefault();
+    const form = e.target
+    fetch("/", {
+      method: 'POST',
+      headers: {'Content-Type':'application/x-www-form-urlencoded'},
+      body: encode({'form-name': form.getAttribute('name'),
+            ...this.state })
+    })
+      .then(() => navigate(form.getAttribute('action')))
+      .catch(error => alert(error));
+  };
+
+  handleChange = e => this.setState({ [e.target.name]: e.target.value });
+
+  render () {
+    const {name, email, message} = this.state;
+    return  (
       <Layout>
         <section style={{position: 'relative'}}>
           <Banner></Banner>
@@ -172,12 +200,16 @@ export default function Home() {
         <section style={{position: 'relative'}}>
           <Banner parallax></Banner>
           <FormFive>
-            <form name='contact' method="post" data-netlify='true'>
+            <form name='contact' method="post" data-netlify='true'
+                action='/thanks/' onSubmit={this.handleSubmit}>
               <div className='fields'>
                 <GenericH2 none>Contact Us</GenericH2>
-                <input type="text" name='name' id='name' placeholder='Name'/>
-                <input type="email" name='email' id='email' placeholder='Email'/>
-                <textarea name="message" id="message"  rows="7" placeholder='Message'>                  
+                <input type="text" name='name' id='name' placeholder='Name'
+                  value={name} onChange={this.handleChange}/>
+                <input type="email" name='email' id='email' placeholder='Email'
+                  value={email} onChange={this.handleChange}/>
+                <textarea name="message" id="message"  rows="7" 
+                  placeholder='Message' value={message} onChange={this.handleChange}>                  
                 </textarea>
                 <div className='actions'>
                   <input type="submit" value='Send Message' className='button__primary'/>
@@ -187,5 +219,8 @@ export default function Home() {
           </FormFive>
         </section>
       </Layout>
-  )
+    )
+  }
 }
+
+export default IndexPage
